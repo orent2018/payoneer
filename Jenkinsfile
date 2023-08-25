@@ -78,7 +78,7 @@ pipeline {
    post {
 
       success {
-         sh 'echo "SUCCESS"'
+         sh 'echo "Great-SUCCESS"'
       }
 
       failure {
