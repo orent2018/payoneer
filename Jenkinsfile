@@ -4,8 +4,10 @@ pipeline {
 
    environment {
      image= "simplecounter"
+     container_name="mywebcontainer"
      version_tag= "${env.BUILD_ID}"
      branch= "${env.BRANCH_NAME}"
+     image_name= "${image}:${branch}-${version_tag}"
      SERVER_PORT="80"
    }
 
@@ -21,7 +23,7 @@ pipeline {
        stage('Build docker image') {
             steps {
                // Build the docker image for the webcounter python app 
-               sh 'docker build -t ${image}:${branch}-${version_tag} .'
+               sh 'docker build -t ${image_name} .'
             }
     
        }
@@ -29,8 +31,8 @@ pipeline {
         stage('Run Tests on the Docker Container from the image') {
             steps {
                 script {
-                    // Run your Python web server container
-                    def containerId = sh(script: "docker run -d -p $SERVER_PORT:$SERVER_PORT --rm ${image}:${branch}-${version_tag}", returnStdout: true).trim()
+                    // Run your web counter container
+                    def containerId = sh(script: "docker run -d -p $SERVER_PORT:$SERVER_PORT --rm ${image_name}", returnStdout: true).trim()
 
                     // Wait for the server to start (you can adjust the timeout as needed)
                     sh "sleep 15s"
@@ -56,24 +58,32 @@ pipeline {
                 }
             }
         }
-//       stage('Run tests on container from the image created') {
-//            steps {
-//               sh 'docker run pystache_alpine pystache-test'
-//            }
     
-
-//       }
 //       stage('Publish image to docker hub') {
 //           steps {
 //             withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]){
 //                   sh '''
-//                   docker tag pystache_alpine ${USER}/repo01:pystach_a-${version_tag}
+//                   docker tag ${image_name} ${image}-main
 //                   docker login --username=${USER} -p ${PASS}
-//                   docker push ${USER}/repo01:pystach_a-${version_tag}
+//                   docker push ${image}-main
 //                   '''
 //            }
 //           }
 //       }
+        stage('Deploy to prod') {
+          when {
+            branch 'main'
+          }
+          steps {
+            input message: "Approve Deploy to prod?", ok: "Deploy"
+            sh '''
+            docker tag ${image_name} ${image}-main
+            docker stop ${container_name} 2> /dev/null
+            sleep 20
+            docker run --name ${container_name} -d -p ${SERVER_PORT}:${SERVER_PORT} --rm ${image}-main
+            ''' 
+          }
+        }
    }
    post {
 
