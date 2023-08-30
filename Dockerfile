@@ -12,10 +12,11 @@ RUN chown webcounter:webcounter /app
 
 # Copy the Python script and any other necessary files
 COPY --chown=webcounter:webcounter webcount.py /app
+COPY --chown=webcounter:webcounter web_counter.txt /app
 
 
 # Switch to the non-root user
-#USER webcounter
+USER webcounter
 
 # Update pip
 RUN pip install --upgrade pip

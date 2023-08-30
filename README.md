@@ -16,6 +16,9 @@ A simple python app webcount.py was created to count and report the number of PO
 
 a GET request
 
+Persistance was added to maintain the count through restarts using a file which is maintained in the docker volume
+and will not change even upon image updates.
+
 A docker file to build an image to run the python app was created
 
 A jenkins multibranch pipeline was created to:
@@ -36,6 +39,10 @@ A github check to verify the success of the jenkins pipeline should be added as 
 The application should be accessible through the URL:  http://ec2-18-194-132-45.eu-central-1.compute.amazonaws.com/
 
 
-Notes:  The docker image was run with root user due to an issue that prevented it from running on this centos machine
+Notes:  In order to verify that the service is up a docker-compose file needs to be created with a healthcheck to curl the
+        application at a predefined interval and triggering restarts if the application crashes as well as alerting upon
+        such an issue.
+
+        The docker image was run with root user due to an issue that prevented it from running on this centos machine
         Once the issue is resolved the change to webcounter user (USER webcounter) in the Dockerfile should be uncommented
         following the security practice of running images as a non root user.
